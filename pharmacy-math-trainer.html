@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pharmacy Math — Endless Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4F7F5; --ink:#12312B; --teal:#1E6B5C; --teal-soft:#E4EFEA;
+    --amber:#C0813A; --amber-soft:#F3E7D3; --caution:#A63D28; --caution-soft:#F5E1DC;
+    --good:#2E7D5B; --good-soft:#DDF0E6;
+    --line:#CFDBD5; --white:#FFFFFF; --muted:#5c726b;
+    --display:"Space Grotesk",system-ui,sans-serif;
+    --body:"IBM Plex Sans",system-ui,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  body{font-family:var(--body);color:var(--ink);background:var(--paper);line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh}
+  .wrap{max-width:600px;margin:0 auto;padding:clamp(18px,4vw,32px) clamp(14px,4vw,26px) 48px}
+
+  .rx-tag{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid var(--line);border-radius:2px;background:var(--white)}
+  .rx-tag::before{content:"℞";font-size:14px;color:var(--amber)}
+  h1{font-family:var(--display);font-weight:700;font-size:clamp(1.9rem,5.5vw,2.6rem);line-height:1;letter-spacing:-.02em;margin:14px 0 4px}
+  .sub{color:var(--muted);font-size:.95rem;margin-bottom:20px}
+
+  /* stats */
+  .stats{display:flex;gap:8px;margin-bottom:16px}
+  .stat{flex:1;background:var(--white);border:1px solid var(--line);border-radius:5px;padding:11px 8px;text-align:center}
+  .stat b{display:block;font-family:var(--display);font-weight:700;font-size:1.4rem;line-height:1}
+  .stat span{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .stat.acc b{color:var(--teal)} .stat.streak b{color:var(--amber)}
+
+  /* category chips */
+  .cats{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+  .chip{font-family:var(--mono);font-size:12px;padding:7px 11px;border:1px solid var(--line);background:var(--white);border-radius:2px;cursor:pointer;color:var(--muted);transition:all .15s}
+  .chip:hover{border-color:var(--amber);color:var(--ink)}
+  .chip[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:var(--white)}
+  .chip:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+  /* reference toggle */
+  .ref-toggle{width:100%;text-align:left;font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--teal);background:var(--teal-soft);border:1px solid var(--line);border-radius:5px;padding:11px 14px;cursor:pointer;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+  .ref-toggle:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  .ref{border:1px solid var(--line);border-radius:6px;background:var(--white);margin-bottom:16px;overflow:hidden;display:none}
+  .ref.show{display:block}
+  .ref-sec{padding:13px 16px;border-bottom:1px solid var(--line)}
+  .ref-sec:last-child{border-bottom:none}
+  .ref-sec h4{font-family:var(--display);font-size:.82rem;color:var(--amber);margin-bottom:7px;text-transform:uppercase;letter-spacing:.06em}
+  .ref-sec div{font-family:var(--mono);font-size:.82rem;line-height:1.8;color:var(--ink)}
+  .ref-sec .k{color:var(--teal)}
+
+  /* problem */
+  .qcard{background:var(--white);border:1px solid var(--line);border-radius:8px;padding:24px 22px;margin-bottom:14px;box-shadow:0 2px 0 var(--line)}
+  .qtype{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin-bottom:12px}
+  .qtext{font-family:var(--display);font-weight:600;font-size:clamp(1.1rem,3vw,1.35rem);line-height:1.32}
+  .formula-hint{margin-top:14px;font-family:var(--mono);font-size:.8rem;color:var(--muted);border-left:3px solid var(--amber);padding:6px 0 6px 12px}
+
+  .answer-row{display:flex;gap:9px;margin-bottom:14px}
+  .answer-row input{flex:1;font-family:var(--mono);font-size:1.15rem;padding:14px 16px;border:1px solid var(--line);border-radius:6px;background:var(--white);color:var(--ink);min-width:0}
+  .answer-row input:focus{outline:2px solid var(--teal);outline-offset:0;border-color:var(--teal)}
+  .answer-row .unit{font-family:var(--mono);font-size:.9rem;color:var(--muted);align-self:center;white-space:nowrap}
+  .check-btn{font-family:var(--display);font-weight:600;font-size:1rem;background:var(--ink);color:var(--white);border:none;border-radius:6px;padding:0 22px;cursor:pointer;transition:background .15s}
+  .check-btn:hover{background:var(--teal)}
+  .check-btn:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+  .solution{border-radius:6px;padding:18px;display:none}
+  .solution.show{display:block}
+  .solution.right{background:var(--good-soft);border:1px solid var(--good)}
+  .solution.nope{background:var(--caution-soft);border:1px solid var(--caution)}
+  .verdict{font-family:var(--display);font-weight:700;font-size:1.05rem;margin-bottom:10px}
+  .solution.right .verdict{color:var(--good)} .solution.nope .verdict{color:var(--caution)}
+  .steps{font-family:var(--mono);font-size:.86rem;line-height:1.9;background:var(--white);border:1px solid var(--line);border-radius:5px;padding:12px 14px}
+  .steps .f{color:var(--teal);font-weight:500} .steps .r{color:var(--ink);font-weight:600}
+  .next-btn{margin-top:14px;font-family:var(--mono);font-size:14px;background:var(--amber);color:var(--white);border:none;border-radius:5px;padding:13px 20px;cursor:pointer;width:100%;transition:filter .15s}
+  .next-btn:hover{filter:brightness(1.08)}
+  .next-btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  footer{margin-top:26px;font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;letter-spacing:.04em}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="rx-tag">PTCB · Endless Math Trainer</span>
+  <h1>Math Trainer</h1>
+  <p class="sub">New numbers every problem. Type your answer, hit check, learn the method. Practice until it's automatic.</p>
+
+  <div class="stats">
+    <div class="stat"><b id="attempted">0</b><span>Done</span></div>
+    <div class="stat acc"><b id="acc">—</b><span>Accuracy</span></div>
+    <div class="stat streak"><b id="streak">0</b><span>Streak</span></div>
+    <div class="stat"><b id="best">0</b><span>Best</span></div>
+  </div>
+
+  <div class="cats" id="cats"></div>
+
+  <button class="ref-toggle" id="refToggle" aria-expanded="false">Formulas &amp; conversions <span id="refArrow">▸ show</span></button>
+  <div class="ref" id="ref">
+    <div class="ref-sec"><h4>Core formulas</h4><div>
+      <span class="k">Days supply</span> = total qty ÷ (dose × times/day)<br>
+      <span class="k">mg/kg dose</span> = mg/kg × weight in kg<br>
+      <span class="k">% strength (w/v)</span> = g ÷ 100 mL<br>
+      <span class="k">Dilution</span> = C₁ × V₁ = C₂ × V₂<br>
+      <span class="k">IV flow</span> = volume ÷ time (hr) → mL/hr<br>
+      <span class="k">IV drip</span> = (volume × drop factor) ÷ time (min)<br>
+      <span class="k">Markup</span> = cost + (cost × markup %)
+    </div></div>
+    <div class="ref-sec"><h4>Conversions to memorize</h4><div>
+      1 g = 1000 mg = 1,000,000 mcg<br>
+      1 kg = 2.2 lb &nbsp;·&nbsp; 1 lb = 454 g<br>
+      1 tsp = 5 mL &nbsp;·&nbsp; 1 tbsp = 15 mL<br>
+      1 fl oz = 30 mL &nbsp;·&nbsp; 1 cup = 240 mL<br>
+      1 gr (grain) = 65 mg
+    </div></div>
+  </div>
+
+  <div class="qcard">
+    <div class="qtype" id="qtype"></div>
+    <div class="qtext" id="qtext"></div>
+    <div class="formula-hint" id="formulaHint"></div>
+  </div>
+
+  <div class="answer-row">
+    <input type="text" inputmode="decimal" id="answerInput" placeholder="your answer" autocomplete="off">
+    <span class="unit" id="unit"></span>
+    <button class="check-btn" id="checkBtn">Check</button>
+  </div>
+
+  <div class="solution" id="solution">
+    <div class="verdict" id="verdict"></div>
+    <div class="steps" id="steps"></div>
+    <button class="next-btn" id="nextBtn">Next problem →</button>
+  </div>
+
+  <footer>℞ A few every day beats one long cram — the methods stick through repetition</footer>
+</div>
+
+<script>
+const rand = arr => arr[Math.floor(Math.random()*arr.length)];
+const freqWord = {1:"once",2:"twice",3:"three times",4:"four times"};
+const round2 = n => Math.round(n*100)/100;
+
+// each generator returns {type, q, formula, unit, answer, steps:[[label,text]...]}
+const GEN = {
+  days(){
+    const perDose=rand([1,2]), times=rand([1,2,3,4]), days=rand([5,7,10,14,20,30]);
+    const qty=perDose*times*days;
+    return {type:"Days supply", unit:"days",
+      q:`Rx: ${qty} tablets. Take ${perDose} tablet${perDose>1?'s':''} ${freqWord[times]} daily. How many days will it last?`,
+      formula:"days = total qty ÷ (dose × times per day)",
+      answer:days,
+      steps:[["Formula","days = qty ÷ (dose × times/day)"],["Plug in",`${qty} ÷ (${perDose} × ${times}) = ${qty} ÷ ${perDose*times}`],["Answer",`= ${days} days`]]};
+  },
+  metric(){
+    const up=Math.random()<0.5;
+    if(up){ const v=rand([0.1,0.25,0.5,0.75,1.5,2]); const a=v*1000;
+      return {type:"Metric conversion", unit:"mg",
+        q:`Convert ${v} g to milligrams (mg).`, formula:"1 g = 1000 mg",
+        answer:round2(a), steps:[["Rule","1 g = 1000 mg"],["Plug in",`${v} × 1000`],["Answer",`= ${round2(a)} mg`]]};
+    } else { const v=rand([100,250,500,750,1500,2000]); const a=v/1000;
+      return {type:"Metric conversion", unit:"g",
+        q:`Convert ${v} mg to grams (g).`, formula:"1000 mg = 1 g",
+        answer:round2(a), steps:[["Rule","1000 mg = 1 g"],["Plug in",`${v} ÷ 1000`],["Answer",`= ${round2(a)} g`]]};
+    }
+  },
+  household(){
+    const u=rand([["teaspoon",5],["tablespoon",15],["fluid ounce",30]]); const n=rand([1,2,3,4]);
+    const a=n*u[1];
+    return {type:"Household conversion", unit:"mL",
+      q:`A dose is ${n} ${u[0]}${n>1?'s':''}. How many mL is that?`, formula:`1 ${u[0]} = ${u[1]} mL`,
+      answer:a, steps:[["Rule",`1 ${u[0]} = ${u[1]} mL`],["Plug in",`${n} × ${u[1]}`],["Answer",`= ${a} mL`]]};
+  },
+  dosing(){
+    const lb=rand([22,44,66,88,110,132,154,176]); const kg=lb/2.2; const mgkg=rand([2,3,5,10]);
+    const a=kg*mgkg;
+    return {type:"Weight-based dosing", unit:"mg",
+      q:`A drug is dosed at ${mgkg} mg/kg. The patient weighs ${lb} lb. What is the dose?`,
+      formula:"dose = mg/kg × weight in kg (convert lb ÷ 2.2 first)",
+      answer:round2(a),
+      steps:[["Convert lb→kg",`${lb} ÷ 2.2 = ${kg} kg`],["Multiply",`${kg} kg × ${mgkg} mg/kg`],["Answer",`= ${round2(a)} mg`]]};
+  },
+  percent(){
+    const pct=rand([2,5,10,20,25]); const vol=rand([100,250,500,1000]); const a=pct/100*vol;
+    return {type:"Percent strength", unit:"g",
+      q:`How many grams of drug are in ${vol} mL of a ${pct}% w/v solution?`,
+      formula:"grams = (% ÷ 100) × volume in mL",
+      answer:round2(a),
+      steps:[["Meaning",`${pct}% w/v = ${pct} g per 100 mL`],["Scale",`(${pct} ÷ 100) × ${vol}`],["Answer",`= ${round2(a)} g`]]};
+  },
+  dilution(){
+    const combos=[[10,100,5],[20,50,4],[10,300,6],[50,20,10],[25,40,10],[10,150,3],[20,100,8],[10,200,4],[40,50,10],[20,150,6]];
+    const c=rand(combos); const [C1,V1,C2]=c; const V2=C1*V1/C2;
+    return {type:"Dilution (C₁V₁=C₂V₂)", unit:"mL",
+      q:`You have ${V1} mL of a ${C1}% solution and dilute it to ${C2}%. What is the final volume?`,
+      formula:"C₁ × V₁ = C₂ × V₂",
+      answer:round2(V2),
+      steps:[["Formula","C₁ × V₁ = C₂ × V₂"],["Plug in",`${C1} × ${V1} = ${C2} × V₂`],["Solve",`V₂ = ${C1*V1} ÷ ${C2}`],["Answer",`= ${round2(V2)} mL`]]};
+  },
+  flow(){
+    const rate=rand([50,100,125,150,200]); const time=rand([2,4,6,8]); const vol=rate*time;
+    return {type:"IV flow rate", unit:"mL/hr",
+      q:`An IV of ${vol} mL is ordered to run over ${time} hours. What is the flow rate?`,
+      formula:"mL/hr = volume ÷ time (hr)",
+      answer:rate,
+      steps:[["Formula","mL/hr = volume ÷ time (hr)"],["Plug in",`${vol} ÷ ${time}`],["Answer",`= ${rate} mL/hr`]]};
+  },
+  drip(){
+    const combos=[[1000,10,15,25],[500,5,15,25],[1000,5,15,50],[1200,10,10,20],[600,5,20,40],[1000,10,60,100],[750,5,20,50],[900,10,20,30],[500,5,10,16.67],[1000,8,20,41.67]];
+    // keep only clean ones for display
+    const clean=[[1000,10,15,25],[500,5,15,25],[1000,5,15,50],[1200,10,10,20],[600,5,20,40],[1000,10,60,100],[750,5,20,50],[900,10,20,30]];
+    const c=rand(clean); const [vol,hr,df,ans]=c; const min=hr*60;
+    return {type:"IV drip rate", unit:"gtt/min",
+      q:`Infuse ${vol} mL over ${hr} hours with tubing rated ${df} gtt/mL. What is the drip rate?`,
+      formula:"gtt/min = (volume × drop factor) ÷ time in minutes",
+      answer:ans,
+      steps:[["Formula","gtt/min = (vol × drop factor) ÷ time (min)"],["Time→min",`${hr} × 60 = ${min} min`],["Plug in",`(${vol} × ${df}) ÷ ${min} = ${vol*df} ÷ ${min}`],["Answer",`= ${ans} gtt/min`]]};
+  },
+  ratio(){
+    const pairs=[[250,5],[125,5],[500,10],[200,5],[100,4]]; const p=rand(pairs); const [mg,mL]=p;
+    const perML=mg/mL; const x=rand([2,3,4,6,8]); const target=perML*x;
+    return {type:"Ratio & proportion", unit:"mL",
+      q:`A solution contains ${mg} mg in ${mL} mL. How many mL contain ${round2(target)} mg?`,
+      formula:"set up a proportion, then cross-multiply",
+      answer:x,
+      steps:[["Set up",`${mg} mg / ${mL} mL = ${round2(target)} mg / x`],["Cross-multiply",`${mg}·x = ${round2(target)} × ${mL} = ${round2(target*mL)}`],["Solve",`x = ${round2(target*mL)} ÷ ${mg}`],["Answer",`= ${x} mL`]]};
+  },
+  business(){
+    const cost=rand([20,40,50,80,100,120]); const markup=rand([10,20,25,50]); const a=cost*(1+markup/100);
+    return {type:"Business math (markup)", unit:"$",
+      q:`A drug costs the pharmacy $${cost}. With a ${markup}% markup, what is the selling price?`,
+      formula:"price = cost + (cost × markup %)",
+      answer:round2(a),
+      steps:[["Formula","price = cost + (cost × markup%)"],["Plug in",`${cost} + (${cost} × ${markup/100}) = ${cost} + ${round2(cost*markup/100)}`],["Answer",`= $${round2(a)}`]]};
+  }
+};
+
+const CATS=[
+  {key:"all",label:"Mix all"},
+  {key:"days",label:"Days supply"},
+  {key:"metric",label:"Metric"},
+  {key:"household",label:"Household"},
+  {key:"dosing",label:"mg/kg"},
+  {key:"percent",label:"% strength"},
+  {key:"dilution",label:"Dilution"},
+  {key:"flow",label:"IV flow"},
+  {key:"drip",label:"IV drip"},
+  {key:"ratio",label:"Ratio"},
+  {key:"business",label:"Markup"},
+];
+
+let cat="all", attempted=0, correct=0, streak=0, best=0, current=null, answered=false;
+const $=id=>document.getElementById(id);
+
+// build chips
+const catsEl=$('cats');
+CATS.forEach(c=>{
+  const b=document.createElement('button');b.className='chip';b.textContent=c.label;b.dataset.key=c.key;
+  b.setAttribute('aria-selected',c.key===cat);
+  b.addEventListener('click',()=>{cat=c.key;Array.from(catsEl.children).forEach(x=>x.setAttribute('aria-selected',x.dataset.key===cat));newProblem();});
+  catsEl.appendChild(b);
+});
+
+function newProblem(){
+  answered=false;
+  const key = cat==="all" ? rand(Object.keys(GEN)) : cat;
+  current = GEN[key]();
+  $('qtype').textContent=current.type;
+  $('qtext').textContent=current.q;
+  $('formulaHint').textContent="Formula: "+current.formula;
+  $('unit').textContent=current.unit;
+  $('answerInput').value='';
+  $('answerInput').disabled=false;
+  $('checkBtn').disabled=false;
+  $('solution').className='solution';
+  $('answerInput').focus();
+}
+
+function check(){
+  if(answered) return;
+  const raw=$('answerInput').value.trim().replace(/[$,]/g,'');
+  if(raw==='') { $('answerInput').focus(); return; }
+  const val=parseFloat(raw);
+  answered=true;
+  attempted++;
+  const tol=Math.max(0.02, Math.abs(current.answer)*0.01);
+  const ok = !isNaN(val) && Math.abs(val-current.answer)<=tol;
+  const sol=$('solution');
+  if(ok){ correct++; streak++; best=Math.max(best,streak);
+    sol.className='solution show right'; $('verdict').textContent = streak>=3 ? `Correct — ${streak} in a row!` : 'Correct!';
+  } else { streak=0;
+    sol.className='solution show nope'; $('verdict').textContent=`Answer: ${current.answer} ${current.unit}`;
+  }
+  $('steps').innerHTML=current.steps.map((s,i)=>{
+    const cls=i===current.steps.length-1?'r':'f';
+    return `<span class="${cls}">${s[0]}:</span> ${s[1]}`;
+  }).join('<br>');
+  $('attempted').textContent=attempted;
+  $('acc').textContent=Math.round(correct/attempted*100)+'%';
+  $('streak').textContent=streak;
+  $('best').textContent=best;
+  $('answerInput').disabled=true;
+  $('checkBtn').disabled=true;
+  $('nextBtn').focus();
+}
+
+$('checkBtn').addEventListener('click',check);
+$('nextBtn').addEventListener('click',newProblem);
+$('answerInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();check();}});
+document.addEventListener('keydown',e=>{
+  if(answered && (e.key==='Enter'||e.key===' ') && document.activeElement!==$('answerInput')){e.preventDefault();newProblem();}
+});
+$('refToggle').addEventListener('click',()=>{
+  const r=$('ref'); const open=r.classList.toggle('show');
+  $('refToggle').setAttribute('aria-expanded',open);
+  $('refArrow').textContent=open?'▾ hide':'▸ show';
+});
+
+newProblem();
+</script>
+</body>
+</html>
